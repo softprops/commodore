@@ -25,7 +25,9 @@ fn params<R: Read>(read: &mut R) -> HashMap<String, String> {
 }
 
 pub enum Resp {
+    // say reponds in channel
     Say(String),
+    // reply responds to caller of command
     Reply(String),
 }
 
