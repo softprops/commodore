@@ -1,0 +1,12 @@
+[package]
+name = "commodore"
+version = "0.1.0"
+authors = ["softprops <d.tangren@gmail.com>"]
+
+[dependencies]
+env_logger = "0.3"
+hyper = "0.6"
+log = "0.3"
+regex = "0.1"
+rustc-serialize = "0.3"
+url = "*"
