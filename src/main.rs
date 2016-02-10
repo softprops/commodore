@@ -1,7 +1,7 @@
 extern crate hyper;
 extern crate commodore;
 
-use commodore::{Mux, Listener};
+use commodore::Mux;
 use hyper::server::Server;
 
 fn main() {
@@ -9,7 +9,5 @@ fn main() {
     let mux: Mux = Default::default();
     let _ = Server::http(addr)
         .unwrap()
-        .handle(Listener {
-          mux: mux
-        });
+        .handle(mux);
 }

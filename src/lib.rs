@@ -206,10 +206,6 @@ impl Mux {
     }
 }
 
-pub struct Listener {
-    pub mux: Mux,
-}
-
 #[derive(Default)]
 pub struct Command {
     pub token: String,
@@ -263,7 +259,7 @@ impl Command {
     }
 }
 
-impl Handler for Listener {
+impl Handler for Mux {
     // https://api.slack.com/slash-commands
     fn handle(&self, req: Request, res: Response) {
         let (_, _, _, _, _, mut body) = req.deconstruct();
@@ -274,7 +270,7 @@ impl Handler for Listener {
             // set up responder
             let responder = DefaultResponder { response_url: cmd.response_url.clone() };
             // handle cmd
-            if let &Some((ref captures, handler)) = &self.mux.handler(&cmd) {
+            if let &Some((ref captures, handler)) = &self.handler(&cmd) {
                 handler.handle(&cmd, &captures, Box::new(responder));
             }
         }
