@@ -7,12 +7,9 @@ use regex::{Captures, Regex};
 use rustc_serialize::json;
 
 use hyper::Client;
-use hyper::server::{Handler, Server, Request, Response};
+use hyper::server::{Handler, Request, Response};
 use std::collections::HashMap;
 use std::io::Read;
-use std::sync::{Arc, Mutex};
-use std::sync::mpsc::channel;
-use std::thread;
 
 fn params<R: Read>(read: &mut R) -> HashMap<String, String> {
     let mut buffer = String::new();
@@ -72,7 +69,7 @@ impl Responder for DefaultResponder {
 pub struct DiscardResponder;
 
 impl Responder for DiscardResponder {
-    fn respond(&self, resp: Resp) {
+    fn respond(&self, _: Resp) {
 
     }
 }
@@ -215,16 +212,16 @@ pub struct Listener {
 
 #[derive(Default)]
 pub struct Command {
-    token: String,
-    team_id: String,
-    team_domain: String,
-    channel_id: String,
-    channel_name: String,
-    user_id: String,
-    user_name: String,
-    command: String,
-    text: String,
-    response_url: String,
+    pub token: String,
+    pub team_id: String,
+    pub team_domain: String,
+    pub channel_id: String,
+    pub channel_name: String,
+    pub user_id: String,
+    pub user_name: String,
+    pub command: String,
+    pub text: String,
+    pub response_url: String,
 }
 
 impl Command {
@@ -273,14 +270,15 @@ impl Handler for Listener {
         // parse params
         let params = params(&mut body);
         // parse cmd
-        let cmd = Command::from_params(params).unwrap();
-        // set up responder
-        let responder = DefaultResponder { response_url: cmd.response_url.clone() };
-        // handle cmd
-        if let &Some((ref captures, handler)) = &self.mux.handler(&cmd) {
-            handler.handle(&cmd, &captures, Box::new(responder));
+        if let Some(cmd) = Command::from_params(params) {
+            // set up responder
+            let responder = DefaultResponder { response_url: cmd.response_url.clone() };
+            // handle cmd
+            if let &Some((ref captures, handler)) = &self.mux.handler(&cmd) {
+                handler.handle(&cmd, &captures, Box::new(responder));
+            }
         }
-        res.send(b"ok");
+        let _ = res.send(b"ok");
         ()
     }
 }
