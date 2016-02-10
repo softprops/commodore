@@ -67,6 +67,14 @@ impl Responder for DefaultResponder {
     }
 }
 
+pub struct DiscardResponder;
+
+impl Responder for DiscardResponder {
+    fn respond(&self, resp: Resp) {
+
+    }
+}
+
 /// A Handle handles matched commands
 pub trait Handle: Sync + Send {
     fn handle(&self,
@@ -100,7 +108,7 @@ impl<H: Handle + 'static> Handle for TokenValidator<H> {
               caps: &Option<Captures>,
               responder: Box<Responder>)
               -> Option<Resp> {
-        if (cmd.token == self.token) {
+        if cmd.token == self.token {
             self.handler.handle(cmd, caps, responder)
         } else {
             None
@@ -124,9 +132,6 @@ impl<F> Matcher for F
 
 /// A direct command matcher
 ///
-/// ```
-/// mux.matching(MatchCommand("foo"), handler)
-/// ```
 pub struct MatchCommand(String);
 
 impl Matcher for MatchCommand {
@@ -137,9 +142,6 @@ impl Matcher for MatchCommand {
 
 /// A regex pattern matcher
 ///
-/// ```
-/// mux.matching(MatchRegex(regex), handler)
-/// ```
 pub struct MatchRegex(Regex);
 
 impl Matcher for MatchRegex {
@@ -167,10 +169,6 @@ pub struct Mux {
 }
 
 impl Mux {
-    ///
-    /// ```
-    /// mux.command("/foo", foo_handler)
-    /// ```
     pub fn command<C, T, H>(&mut self, cmd: C, token: T, handler: H)
         where C: Into<String>,
               T: Into<String>,
@@ -183,10 +181,6 @@ impl Mux {
                       })
     }
 
-    ///
-    /// ```
-    /// mux.matching(matcher, handler)
-    /// ```
     pub fn matching<M, H>(&mut self, matcher: M, handler: H)
         where M: Matcher + 'static,
               H: Handle + 'static
@@ -217,6 +211,7 @@ pub struct Listener {
     pub mux: Mux,
 }
 
+#[derive(Default)]
 pub struct Command {
     token: String,
     team_id: String,
@@ -289,6 +284,22 @@ impl Handler for Listener {
 }
 
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use super::regex::{Regex,Captures};
 
-#[test]
-fn it_works() {}
+    #[test]
+    fn matches_commands() {
+        let cmd = Command { command: "/test".to_owned(), ..Default::default() };
+        let (caps, matched) = MatchCommand("/test".to_owned()).matches(&cmd);
+        assert!(matched)
+    }
+
+    #[test]
+    fn matches_regexes() {
+        let cmd = Command { command: "/test".to_owned(), ..Default::default() };
+        let (caps, matched) = MatchRegex(Regex::new("(test)").unwrap()).matches(&cmd);
+        assert!(matched)
+    }
+}
