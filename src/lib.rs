@@ -204,6 +204,15 @@ impl Mux {
         }
         None
     }
+
+    pub fn handle(&self, cmd: &Command) {
+        // set up responder
+        let responder = DefaultResponder { response_url: cmd.response_url.clone() };
+        // handle cmd
+        if let &Some((ref captures, handler)) = &self.handler(&cmd) {
+            handler.handle(&cmd, &captures, Box::new(responder));
+        }
+    }
 }
 
 #[derive(Default)]
@@ -267,12 +276,7 @@ impl Handler for Mux {
         let params = params(&mut body);
         // parse cmd
         if let Some(cmd) = Command::from_params(params) {
-            // set up responder
-            let responder = DefaultResponder { response_url: cmd.response_url.clone() };
-            // handle cmd
-            if let &Some((ref captures, handler)) = &self.handler(&cmd) {
-                handler.handle(&cmd, &captures, Box::new(responder));
-            }
+            self.handle(&cmd)
         }
         let _ = res.send(b"ok");
         ()
