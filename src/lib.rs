@@ -3,7 +3,7 @@ extern crate rustc_serialize;
 extern crate url;
 extern crate regex;
 
-use regex::{Captures, Regex};
+use regex::{Captures as RegexCaptures, Regex};
 use rustc_serialize::json;
 
 use hyper::Client;
@@ -20,6 +20,8 @@ fn params<R: Read>(read: &mut R) -> HashMap<String, String> {
     }
     params
 }
+
+pub type Captures<'a> = RegexCaptures<'a>;
 
 pub trait Responder {
     fn respond(&self, response: Response) -> ();
@@ -188,6 +190,10 @@ pub struct Mux {
 }
 
 impl Mux {
+    pub fn new() -> Mux {
+        Mux { ..Default::default() }
+    }
+
     pub fn command<C, T, H>(&mut self, cmd: C, token: T, handler: H)
         where C: Into<String>,
               T: Into<String>,
