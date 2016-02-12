@@ -41,7 +41,9 @@ pub struct Response {
 }
 
 impl Response {
-    pub fn builder<T>(text: T) -> ResponseBuilder where T: Into<String> {
+    pub fn builder<T>(text: T) -> ResponseBuilder
+        where T: Into<String>
+    {
         ResponseBuilder::new(text)
     }
 }
@@ -53,10 +55,12 @@ pub struct ResponseBuilder {
 }
 
 impl ResponseBuilder {
-    pub fn new<T>(text: T) -> ResponseBuilder where T: Into<String> {
+    pub fn new<T>(text: T) -> ResponseBuilder
+        where T: Into<String>
+    {
         ResponseBuilder {
             text: text.into(),
-            response_type: "ephemeral".to_owned()
+            response_type: "ephemeral".to_owned(),
         }
     }
 
@@ -73,7 +77,7 @@ impl ResponseBuilder {
     pub fn build(&self) -> Response {
         Response {
             text: self.text.clone(),
-            response_type: self.response_type.clone()
+            response_type: self.response_type.clone(),
         }
     }
 }
@@ -91,9 +95,7 @@ impl Responder for DefaultResponder {
 pub struct DiscardResponder;
 
 impl Responder for DiscardResponder {
-    fn respond(&self, _: Response) {
-
-    }
+    fn respond(&self, _: Response) {}
 }
 
 /// A Handle handles matched commands

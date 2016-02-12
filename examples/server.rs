@@ -12,11 +12,14 @@ pub fn main() {
     env_logger::init().unwrap();
     let addr = format!("0.0.0.0:{}", 4567);
     let mut mux = Mux::new();
-    mux.command("/commadore", "secrettoken", |_: &Command, _: &Option<Captures>, _: Box<Responder>| -> Option<Response> {
-        None
-    });
-    let srvc = Server::http(&addr[..]).unwrap()
-        .handle(mux);
+    mux.command("/commadore",
+                "secrettoken",
+                |_: &Command, _: &Option<Captures>, _: Box<Responder>| -> Option<Response> {
+                    None
+                });
+    let srvc = Server::http(&addr[..])
+                   .unwrap()
+                   .handle(mux);
     println!("listening on {}", addr);
     srvc.unwrap();
 }
