@@ -21,11 +21,6 @@ fn params<R: Read>(read: &mut R) -> HashMap<String, String> {
     params
 }
 
-pub enum Response {
-    Channel(String),
-    Ephemeral(String),
-}
-
 pub trait Responder {
     fn respond(&self, response: Response) -> ();
 }
@@ -38,30 +33,31 @@ pub struct DefaultResponder {
 /// for formatting rules see [this doc](https://api.slack.com/docs/formatting)
 /// for attachments see [this doc](https://api.slack.com/docs/attachments)
 #[derive(Debug, RustcEncodable)]
-pub struct ResponseBody {
+pub struct Response {
     pub text: String,
-    pub response_type: Option<String>,
+    pub response_type: String,
+}
+
+impl Response {
+    pub fn ephemeral<T>(text: T) -> Response where T: Into<String> {
+        Response {
+            text: text.into(),
+            response_type: "ephemeral".to_owned()
+        }
+    }
+    pub fn in_channel<T>(text: T) -> Response where T: Into<String> {
+        Response {
+            text: text.into(),
+            response_type: "in_channel".to_owned()
+        }
+    }
 }
 
 impl Responder for DefaultResponder {
     fn respond(&self, response: Response) {
-        let body = match response {
-            Response::Channel(text) => {
-                ResponseBody {
-                    text: text,
-                    response_type: Some("in_channel".to_owned()),
-                }
-            }
-            Response::Ephemeral(text) => {
-                ResponseBody {
-                    text: text,
-                    response_type: None,
-                }
-            }
-        };
         let client = Client::new();
         let _ = client.post(&self.response_url[..])
-                      .body(json::encode(&body).unwrap().as_bytes())
+                      .body(json::encode(&response).unwrap().as_bytes())
                       .send();
     }
 }
