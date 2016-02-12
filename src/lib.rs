@@ -7,7 +7,7 @@ use regex::{Captures, Regex};
 use rustc_serialize::json;
 
 use hyper::Client;
-use hyper::server::{Handler, Request, Response};
+use hyper::server::{Handler, Request, Response as HyperResponse};
 use std::collections::HashMap;
 use std::io::Read;
 
@@ -21,15 +21,13 @@ fn params<R: Read>(read: &mut R) -> HashMap<String, String> {
     params
 }
 
-pub enum Resp {
-    // say reponds in channel
-    Say(String),
-    // reply responds to caller of command
-    Reply(String),
+pub enum Response {
+    Channel(String),
+    Ephemeral(String),
 }
 
 pub trait Responder {
-    fn respond(&self, response: Resp) -> ();
+    fn respond(&self, response: Response) -> ();
 }
 
 pub struct DefaultResponder {
@@ -44,15 +42,15 @@ pub struct ResponseBody {
 }
 
 impl Responder for DefaultResponder {
-    fn respond(&self, response: Resp) {
+    fn respond(&self, response: Response) {
         let body = match response {
-            Resp::Say(text) => {
+            Response::Channel(text) => {
                 ResponseBody {
                     text: text,
                     response_type: Some("in_channel".to_owned()),
                 }
             }
-            Resp::Reply(text) => {
+            Response::Ephemeral(text) => {
                 ResponseBody {
                     text: text,
                     response_type: None,
@@ -69,7 +67,7 @@ impl Responder for DefaultResponder {
 pub struct DiscardResponder;
 
 impl Responder for DiscardResponder {
-    fn respond(&self, _: Resp) {
+    fn respond(&self, _: Response) {
 
     }
 }
@@ -80,18 +78,18 @@ pub trait Handle: Sync + Send {
               cmd: &Command,
               caps: &Option<Captures>,
               responder: Box<Responder>)
-              -> Option<Resp>;
+              -> Option<Response>;
 }
 
 impl<F> Handle for F
-    where F: Fn(&Command, &Option<Captures>, Box<Responder>) -> Option<Resp>,
+    where F: Fn(&Command, &Option<Captures>, Box<Responder>) -> Option<Response>,
           F: Send + Sync
 {
     fn handle(&self,
               cmd: &Command,
               caps: &Option<Captures>,
               responder: Box<Responder>)
-              -> Option<Resp> {
+              -> Option<Response> {
         self(cmd, caps, responder)
     }
 }
@@ -106,7 +104,7 @@ impl<H: Handle + 'static> Handle for TokenValidator<H> {
               cmd: &Command,
               caps: &Option<Captures>,
               responder: Box<Responder>)
-              -> Option<Resp> {
+              -> Option<Response> {
         if cmd.token == self.token {
             self.handler.handle(cmd, caps, responder)
         } else {
@@ -270,7 +268,7 @@ impl Command {
 
 impl Handler for Mux {
     // https://api.slack.com/slash-commands
-    fn handle(&self, req: Request, res: Response) {
+    fn handle(&self, req: Request, res: HyperResponse) {
         let (_, _, _, _, _, mut body) = req.deconstruct();
         // parse params
         let params = params(&mut body);
