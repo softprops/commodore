@@ -32,27 +32,50 @@ pub struct DefaultResponder {
 /// A payload to reply to commands with
 /// for formatting rules see [this doc](https://api.slack.com/docs/formatting)
 /// for attachments see [this doc](https://api.slack.com/docs/attachments)
-#[derive(Debug, RustcEncodable)]
+#[derive(Debug, RustcEncodable, Default)]
 pub struct Response {
     pub text: String,
     pub response_type: String,
 }
 
-// todo export a builder interface
 impl Response {
-    pub fn ephemeral<T>(text: T) -> Response where T: Into<String> {
-        Response {
+    pub fn builder<T>(text: T) -> ResponseBuilder where T: Into<String> {
+        ResponseBuilder::new(text)
+    }
+}
+
+#[derive(Default)]
+pub struct ResponseBuilder {
+    pub text: String,
+    pub response_type: String,
+}
+
+impl ResponseBuilder {
+    pub fn new<T>(text: T) -> ResponseBuilder where T: Into<String> {
+        ResponseBuilder {
             text: text.into(),
             response_type: "ephemeral".to_owned()
         }
     }
-    pub fn in_channel<T>(text: T) -> Response where T: Into<String> {
+
+    pub fn ephemeral(&mut self) -> &mut ResponseBuilder {
+        self.response_type = "ephemeral".to_owned();
+        self
+    }
+
+    pub fn in_channel(&mut self) -> &mut ResponseBuilder {
+        self.response_type = "in_channel".to_owned();
+        self
+    }
+
+    pub fn build(&self) -> Response {
         Response {
-            text: text.into(),
-            response_type: "in_channel".to_owned()
+            text: self.text.clone(),
+            response_type: self.response_type.clone()
         }
     }
 }
+
 
 impl Responder for DefaultResponder {
     fn respond(&self, response: Response) {
