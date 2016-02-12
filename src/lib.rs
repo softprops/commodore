@@ -38,6 +38,7 @@ pub struct Response {
     pub response_type: String,
 }
 
+// todo export a builder interface
 impl Response {
     pub fn ephemeral<T>(text: T) -> Response where T: Into<String> {
         Response {
