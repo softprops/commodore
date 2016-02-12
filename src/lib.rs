@@ -1,3 +1,5 @@
+//! call rank and take command of slack with rust at your helm
+
 #[macro_use]
 extern crate log;
 extern crate hyper;
