@@ -1,3 +1,5 @@
+#[macro_use]
+extern crate log;
 extern crate hyper;
 extern crate rustc_serialize;
 extern crate url;
@@ -238,12 +240,13 @@ impl Mux {
         let responder = DefaultResponder { response_url: cmd.response_url.clone() };
         // handle cmd
         if let &Some((ref captures, handler)) = &self.handler(&cmd) {
+            info!("attempting to handle cmd ${:?}", cmd);
             handler.handle(&cmd, &captures, Box::new(responder));
         }
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Command {
     pub token: String,
     pub team_id: String,
@@ -304,7 +307,10 @@ impl Handler for Mux {
         let params = params(&mut body);
         // parse cmd
         if let Some(cmd) = Command::from_params(params) {
+            info!("rec cmd {:?}", cmd);
             self.handle(&cmd)
+        } else {
+            error!("rec invalid cmd")
         }
         let _ = res.send(b"ok");
         ()
