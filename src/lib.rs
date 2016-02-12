@@ -34,7 +34,9 @@ pub struct DefaultResponder {
     response_url: String,
 }
 
-// todo: attachments
+/// A payload to reply to commands with
+/// for formatting rules see [this doc](https://api.slack.com/docs/formatting)
+/// for attachments see [this doc](https://api.slack.com/docs/attachments)
 #[derive(Debug, RustcEncodable)]
 pub struct ResponseBody {
     pub text: String,
@@ -285,19 +287,19 @@ impl Handler for Mux {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use super::regex::{Regex,Captures};
+    use super::regex::Regex;
 
     #[test]
     fn matches_commands() {
         let cmd = Command { command: "/test".to_owned(), ..Default::default() };
-        let (caps, matched) = MatchCommand("/test".to_owned()).matches(&cmd);
+        let (_, matched) = MatchCommand("/test".to_owned()).matches(&cmd);
         assert!(matched)
     }
 
     #[test]
     fn matches_regexes() {
         let cmd = Command { command: "/test".to_owned(), ..Default::default() };
-        let (caps, matched) = MatchRegex(Regex::new("(test)").unwrap()).matches(&cmd);
+        let (_, matched) = MatchRegex(Regex::new("(test)").unwrap()).matches(&cmd);
         assert!(matched)
     }
 }
