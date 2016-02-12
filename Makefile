@@ -5,3 +5,7 @@ build:
 clean:
 	@cargo clean
 .PHONY: clean
+
+test:
+	@cargo test
+.PHONY: test
