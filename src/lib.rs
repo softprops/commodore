@@ -33,7 +33,7 @@ pub type Captures<'a> = RegexCaptures<'a>;
 /// Responds to commands after some deferred time
 /// This allows command handlers to asyncronously
 /// response to commands
-pub trait Responder {
+pub trait Responder: Sync + Send {
     fn respond(&self, response: Response) -> ();
 }
 
