@@ -13,6 +13,7 @@ impl Response {
     }
 }
 
+/// builder interface for responses
 #[derive(Default)]
 pub struct ResponseBuilder {
     text: String,
