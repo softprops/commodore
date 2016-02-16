@@ -192,7 +192,7 @@ impl Mux {
         None
     }
 
-    pub fn handle(&self, cmd: &Command)  -> Option<Response> {
+    pub fn handle(&self, cmd: &Command) -> Option<Response> {
         // set up responder
         let responder = DefaultResponder { response_url: cmd.response_url.clone() };
         // handle cmd
@@ -273,7 +273,7 @@ impl Handler for Mux {
             if let Some(resp) = self.handle(&cmd) {
                 match serde_json::to_string(&resp) {
                     Ok(payload) => write(payload.as_bytes()),
-                        _ => write(b"ok")
+                    _ => write(b"ok"),
                 };
             } else {
                 write(b"ok")
