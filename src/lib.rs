@@ -10,7 +10,7 @@ extern crate serde_json;
 
 mod rep;
 
-pub use rep::Response;
+pub use rep::{Response, ResponseBuilder};
 use regex::{Captures as RegexCaptures, Regex};
 
 use hyper::Client;
