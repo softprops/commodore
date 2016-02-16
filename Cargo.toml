@@ -2,6 +2,12 @@
 name = "commodore"
 version = "0.1.0"
 authors = ["softprops <d.tangren@gmail.com>"]
+description = "Slack Command API handler library"
+documentation = "http://softprops.github.io/commodore"
+homepage = "https://github.com/softprops/commodore"
+repository = "https://github.com/softprops/commodore"
+keywords = ["hyper", "slack", "webhook"]
+license = "MIT"
 build = "build.rs"
 
 [build-dependencies]
@@ -15,4 +21,4 @@ log = "0.3"
 regex = "0.1"
 serde = "0.6"
 serde_json = "0.6"
-url = "*"
+url = "0.5"
