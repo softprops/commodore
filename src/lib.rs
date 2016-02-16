@@ -192,13 +192,15 @@ impl Mux {
         None
     }
 
-    pub fn handle(&self, cmd: &Command) {
+    pub fn handle(&self, cmd: &Command)  -> Option<Response> {
         // set up responder
         let responder = DefaultResponder { response_url: cmd.response_url.clone() };
         // handle cmd
         if let &Some((ref captures, handler)) = &self.handler(&cmd) {
             info!("attempting to handle cmd ${:?}", cmd);
-            handler.handle(&cmd, &captures, Box::new(responder));
+            handler.handle(&cmd, &captures, Box::new(responder))
+        } else {
+            None
         }
     }
 }
@@ -265,11 +267,21 @@ impl Handler for Mux {
         // parse cmd
         if let Some(cmd) = Command::from_params(params) {
             info!("rec cmd {:?}", cmd);
-            self.handle(&cmd)
+            let write = |bytes: &[u8]| {
+                let _ = res.send(bytes);
+            };
+            if let Some(resp) = self.handle(&cmd) {
+                match serde_json::to_string(&resp) {
+                    Ok(payload) => write(payload.as_bytes()),
+                        _ => write(b"ok")
+                };
+            } else {
+                write(b"ok")
+            };
         } else {
-            error!("rec invalid cmd")
+            error!("rec invalid cmd");
+            let _ = res.send(b"ok");
         }
-        let _ = res.send(b"ok");
         ()
     }
 }
