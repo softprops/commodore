@@ -291,6 +291,7 @@ impl Handler for Mux {
 mod tests {
     use super::*;
     use super::regex::Regex;
+    use std::collections::HashMap;
 
     #[test]
     fn matches_commands() {
@@ -304,5 +305,21 @@ mod tests {
         let cmd = Command { command: "/test".to_owned(), ..Default::default() };
         let (_, matched) = MatchRegex(Regex::new("(test)").unwrap()).matches(&cmd);
         assert!(matched)
+    }
+
+    #[test]
+    fn extracts_commands() {
+        let mut params = HashMap::new();
+        params.insert("token".to_owned(), "test_token".to_owned());
+        params.insert("team_id".to_owned(), "test_team".to_owned());
+        params.insert("team_domain".to_owned(), "test_team_domain".to_owned());
+        params.insert("channel_id".to_owned(), "test_channel_id".to_owned());
+        params.insert("channel_name".to_owned(), "test_channel_name".to_owned());
+        params.insert("user_id".to_owned(), "test_user_id".to_owned());
+        params.insert("user_name".to_owned(), "test_user_name".to_owned());
+        params.insert("command".to_owned(), "test_command".to_owned());
+        params.insert("text".to_owned(), "test_text".to_owned());
+        params.insert("response_url".to_owned(), "test_response_url".to_owned());
+        assert!(Command::from_params(params).is_some())
     }
 }
