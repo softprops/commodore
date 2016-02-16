@@ -7,6 +7,8 @@ extern crate hyper;
 
 use commodore::{Captures, Command, Mux, Response, Responder};
 use hyper::Server;
+use std::thread;
+use std::time::Duration;
 
 pub fn main() {
     env_logger::init().unwrap();
@@ -14,9 +16,14 @@ pub fn main() {
     let mut mux = Mux::new();
     mux.command("/commodore",
                 "secrettoken",
-                |c: &Command, _: &Option<Captures>, _: Box<Responder>| -> Option<Response> {
+                |c: &Command, _: &Option<Captures>, responder: Box<Responder>| -> Option<Response> {
                     info!("handler recv cmd {:#?}", c);
-                    None
+                    thread::spawn(move || {
+                        // simulate doing something important
+                        thread::sleep(Duration::from_secs(3));
+                        responder.respond(Response::builder("some time later").build());
+                    });
+                    Some(Response::builder("got it").build())
                 });
     let srvc = Server::http(&addr[..])
                    .unwrap()
