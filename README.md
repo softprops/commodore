@@ -1,6 +1,6 @@
 # commodore
 
-[![Build Status](https://travis-ci.org/softprops/commodore.svg?branch=master)](https://travis-ci.org/softprops/commodore)
+[![Build Status](https://travis-ci.org/softprops/commodore.svg?branch=master)](https://travis-ci.org/softprops/commodore) [![Coverage Status](https://coveralls.io/repos/github/softprops/commodore/badge.svg?branch=master)](https://coveralls.io/github/softprops/commodore?branch=master)
 
 > call rank and take command of slack with rust at your helm
 
