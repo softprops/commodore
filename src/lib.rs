@@ -14,7 +14,7 @@ pub use rep::{Response, ResponseBuilder};
 use regex::{Captures as RegexCaptures, Regex};
 
 use hyper::Client;
-use hyper::server::{Handler, Request, Response as HyperResponse};
+use hyper::server::{Handler as HyperHandler, Request, Response as HyperResponse};
 use std::collections::HashMap;
 use std::io::Read;
 
@@ -57,8 +57,8 @@ impl Responder for DiscardResponder {
     fn respond(&self, _: Response) {}
 }
 
-/// A Handle handles matched commands
-pub trait Handle: Sync + Send {
+/// Handles matched commands
+pub trait Handler: Sync + Send {
     fn handle(&self,
               cmd: &Command,
               caps: &Option<Captures>,
@@ -66,7 +66,7 @@ pub trait Handle: Sync + Send {
               -> Option<Response>;
 }
 
-impl<F> Handle for F
+impl<F> Handler for F
     where F: Fn(&Command, &Option<Captures>, Box<Responder>) -> Option<Response>,
           F: Send + Sync
 {
@@ -79,12 +79,12 @@ impl<F> Handle for F
     }
 }
 
-pub struct TokenValidator<H: Handle + 'static> {
+pub struct TokenValidator<H: Handler + 'static> {
     handler: H,
     token: String,
 }
 
-impl<H: Handle + 'static> Handle for TokenValidator<H> {
+impl<H: Handler + 'static> Handler for TokenValidator<H> {
     fn handle(&self,
               cmd: &Command,
               caps: &Option<Captures>,
@@ -138,7 +138,7 @@ impl Matcher for MatchRegex {
 
 /// A binding between a command handler and which commands its handles
 pub struct Route {
-    handler: Box<Handle>,
+    handler: Box<Handler>,
     matcher: Box<Matcher>,
 }
 
@@ -158,7 +158,7 @@ impl Mux {
     pub fn command<C, T, H>(&mut self, cmd: C, token: T, handler: H)
         where C: Into<String>,
               T: Into<String>,
-              H: Handle + 'static
+              H: Handler + 'static
     {
         self.matching(MatchCommand(cmd.into()),
                       TokenValidator {
@@ -169,7 +169,7 @@ impl Mux {
 
     pub fn matching<M, H>(&mut self, matcher: M, handler: H)
         where M: Matcher + 'static,
-              H: Handle + 'static
+              H: Handler + 'static
     {
         let route = Route {
             handler: Box::new(handler),
@@ -183,7 +183,7 @@ impl Mux {
         self.routes.push(Box::new(route));
     }
 
-    pub fn handler<'a>(&self, cmd: &'a Command) -> Option<(Option<Captures<'a>>, &Box<Handle>)> {
+    pub fn handler<'a>(&self, cmd: &'a Command) -> Option<(Option<Captures<'a>>, &Box<Handler>)> {
         for r in self.routes.iter() {
             if let (captures, true) = r.matcher.matches(cmd) {
                 return Some((captures, &r.handler));
@@ -258,7 +258,7 @@ impl Command {
     }
 }
 
-impl Handler for Mux {
+impl HyperHandler for Mux {
     // https://api.slack.com/slash-commands
     fn handle(&self, req: Request, res: HyperResponse) {
         let (_, _, _, _, _, mut body) = req.deconstruct();
