@@ -207,7 +207,7 @@ impl Mux {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, PartialEq)]
 pub struct Command {
     pub token: String,
     pub team_id: String,
@@ -322,6 +322,20 @@ mod tests {
         params.insert("command".to_owned(), "test_command".to_owned());
         params.insert("text".to_owned(), "test_text".to_owned());
         params.insert("response_url".to_owned(), "test_response_url".to_owned());
-        assert!(Command::from_params(params).is_some())
+        match Command::from_params(params) {
+            Some(cmd) => assert_eq!(cmd, Command {
+                token: "test_token".to_owned(),
+                team_id: "test_team".to_owned(),
+                team_domain: "test_team_domain".to_owned(),
+                channel_id: "test_channel_id".to_owned(),
+                channel_name: "test_channel_name".to_owned(),
+                user_id: "test_user_id".to_owned(),
+                user_name: "test_user_name".to_owned(),
+                command: "test_command".to_owned(),
+                text: "test_text".to_owned(),
+                response_url: "test_response_url".to_owned()
+            }),
+            _ => assert!(false)
+        }
     }
 }
