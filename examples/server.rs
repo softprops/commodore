@@ -12,9 +12,10 @@ pub fn main() {
     env_logger::init().unwrap();
     let addr = format!("0.0.0.0:{}", 4567);
     let mut mux = Mux::new();
-    mux.command("/commadore",
+    mux.command("/commodore",
                 "secrettoken",
-                |_: &Command, _: &Option<Captures>, _: Box<Responder>| -> Option<Response> {
+                |c: &Command, _: &Option<Captures>, _: Box<Responder>| -> Option<Response> {
+                    info!("handler recv cmd {:#?}", c);
                     None
                 });
     let srvc = Server::http(&addr[..])

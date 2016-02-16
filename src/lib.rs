@@ -3,12 +3,15 @@
 #[macro_use]
 extern crate log;
 extern crate hyper;
-extern crate rustc_serialize;
 extern crate url;
 extern crate regex;
+extern crate serde;
+extern crate serde_json;
 
+mod rep;
+
+pub use rep::Response;
 use regex::{Captures as RegexCaptures, Regex};
-use rustc_serialize::json;
 
 use hyper::Client;
 use hyper::server::{Handler, Request, Response as HyperResponse};
@@ -35,63 +38,12 @@ pub struct DefaultResponder {
     response_url: String,
 }
 
-/// A payload to reply to commands with
-/// for formatting rules see [this doc](https://api.slack.com/docs/formatting)
-/// for attachments see [this doc](https://api.slack.com/docs/attachments)
-#[derive(Debug, RustcEncodable, Default)]
-pub struct Response {
-    pub text: String,
-    pub response_type: String,
-}
-
-impl Response {
-    pub fn builder<T>(text: T) -> ResponseBuilder
-        where T: Into<String>
-    {
-        ResponseBuilder::new(text)
-    }
-}
-
-#[derive(Default)]
-pub struct ResponseBuilder {
-    pub text: String,
-    pub response_type: String,
-}
-
-impl ResponseBuilder {
-    pub fn new<T>(text: T) -> ResponseBuilder
-        where T: Into<String>
-    {
-        ResponseBuilder {
-            text: text.into(),
-            response_type: "ephemeral".to_owned(),
-        }
-    }
-
-    pub fn ephemeral(&mut self) -> &mut ResponseBuilder {
-        self.response_type = "ephemeral".to_owned();
-        self
-    }
-
-    pub fn in_channel(&mut self) -> &mut ResponseBuilder {
-        self.response_type = "in_channel".to_owned();
-        self
-    }
-
-    pub fn build(&self) -> Response {
-        Response {
-            text: self.text.clone(),
-            response_type: self.response_type.clone(),
-        }
-    }
-}
-
 
 impl Responder for DefaultResponder {
     fn respond(&self, response: Response) {
         let client = Client::new();
         let _ = client.post(&self.response_url[..])
-                      .body(json::encode(&response).unwrap().as_bytes())
+                      .body(serde_json::to_string(&response).unwrap().as_bytes())
                       .send();
     }
 }
