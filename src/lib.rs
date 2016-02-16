@@ -18,6 +18,8 @@ use hyper::server::{Handler as HyperHandler, Request, Response as HyperResponse}
 use std::collections::HashMap;
 use std::io::Read;
 
+const DEFAULT_RESPONSE: &'static [u8] =  b"ok";
+
 fn params<R: Read>(read: &mut R) -> HashMap<String, String> {
     let mut buffer = String::new();
     read.read_to_string(&mut buffer).unwrap();
@@ -273,14 +275,14 @@ impl HyperHandler for Mux {
             if let Some(resp) = self.handle(&cmd) {
                 match serde_json::to_string(&resp) {
                     Ok(payload) => write(payload.as_bytes()),
-                    _ => write(b"ok"),
+                    _ => write(DEFAULT_RESPONSE),
                 };
             } else {
-                write(b"ok")
+                write(DEFAULT_RESPONSE)
             };
         } else {
             error!("rec invalid cmd");
-            let _ = res.send(b"ok");
+            let _ = res.send(DEFAULT_RESPONSE);
         }
         ()
     }
