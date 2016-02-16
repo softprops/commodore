@@ -30,7 +30,7 @@ fn params<R: Read>(read: &mut R) -> HashMap<String, String> {
 
 pub type Captures<'a> = RegexCaptures<'a>;
 
-/// Responses to commands after some deferred time
+/// Responds to commands after some deferred time
 /// This allows command handlers to asyncronously
 /// response to commands
 pub trait Responder {
