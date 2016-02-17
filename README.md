@@ -4,6 +4,8 @@
 
 > call rank and take command of slack with rust at your helm
 
+![Slack](assets/slack.png) <=> ![Rust](assets/ferris.png)
+
 Commodore allows you to easily extend your [Slack](https://slack.com/) expeience with [Rust](https://www.rust-lang.org/) via Slack's [Command API](https://api.slack.com/slash-commands).
 
 ## usage
