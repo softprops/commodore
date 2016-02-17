@@ -14,6 +14,7 @@ pub use rep::{Response, ResponseBuilder};
 use regex::{Captures as RegexCaptures, Regex};
 
 use hyper::Client;
+use hyper::header::ContentType;
 use hyper::server::{Handler as HyperHandler, Request, Response as HyperResponse};
 use std::collections::HashMap;
 use std::io::Read;
@@ -262,23 +263,25 @@ impl Command {
 
 impl HyperHandler for Mux {
     // https://api.slack.com/slash-commands
-    fn handle(&self, req: Request, res: HyperResponse) {
+    fn handle(&self, req: Request, mut res: HyperResponse) {
         let (_, _, _, _, _, mut body) = req.deconstruct();
+
         // parse params
         let params = params(&mut body);
         // parse cmd
         if let Some(cmd) = Command::from_params(params) {
             info!("rec cmd {:?}", cmd);
-            let write = |bytes: &[u8]| {
+            let write = |bytes: &[u8], content_type: ContentType| {
+                res.headers_mut().set(content_type);
                 let _ = res.send(bytes);
             };
             if let Some(resp) = self.handle(&cmd) {
                 match serde_json::to_string(&resp) {
-                    Ok(payload) => write(payload.as_bytes()),
-                    _ => write(DEFAULT_RESPONSE),
+                    Ok(payload) => write(payload.as_bytes(), ContentType::json()),
+                    _ => write(DEFAULT_RESPONSE, ContentType::plaintext()),
                 };
             } else {
-                write(DEFAULT_RESPONSE)
+                write(DEFAULT_RESPONSE, ContentType::plaintext())
             };
         } else {
             error!("rec invalid cmd");
