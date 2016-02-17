@@ -49,6 +49,7 @@ impl Responder for DefaultResponder {
     fn respond(&self, response: Response) {
         let client = Client::new();
         let _ = client.post(&self.response_url[..])
+                      .header(ContentType::json())
                       .body(serde_json::to_string(&response).unwrap().as_bytes())
                       .send();
     }
