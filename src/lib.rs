@@ -44,7 +44,6 @@ pub struct DefaultResponder {
     response_url: String,
 }
 
-
 impl Responder for DefaultResponder {
     fn respond(&self, response: Response) {
         let client = Client::new();
