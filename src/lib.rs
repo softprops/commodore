@@ -54,13 +54,23 @@ impl Responder for DefaultResponder {
     }
 }
 
+
 /// Command handling interface
 pub trait Handler: Sync + Send {
+    /// handles Slack commands. Optional captures resulting
+    /// from matching are provided along with an interface
+    /// for deferred responses
     fn handle(&self,
               cmd: &Command,
               caps: &Option<Captures>,
               responder: Box<Responder>)
               -> Option<Response>;
+
+    /// provides a mean explicit coersion for
+    /// disambiguating cases where a fn named `handle` is
+    /// already defined in another trait for which another
+    /// impl exists for the same type
+    fn as_handler(&self) -> &Handler;
 }
 
 impl<F> Handler for F
@@ -73,6 +83,10 @@ impl<F> Handler for F
               responder: Box<Responder>)
               -> Option<Response> {
         self(cmd, caps, responder)
+    }
+
+    fn as_handler(&self) -> &Handler {
+        self
     }
 }
 
@@ -93,6 +107,10 @@ impl<H: Handler + 'static> Handler for TokenValidator<H> {
         } else {
             None
         }
+    }
+
+    fn as_handler(&self) -> &Handler {
+        self
     }
 }
 
@@ -187,17 +205,24 @@ impl Mux {
         }
         None
     }
+}
 
-    pub fn handle(&self, cmd: &Command) -> Option<Response> {
-        // set up responder
-        let responder = DefaultResponder { response_url: cmd.response_url.clone() };
-        // handle cmd
+impl Handler for Mux {
+    fn handle(&self,
+              cmd: &Command,
+              _: &Option<Captures>,
+              responder: Box<Responder>)
+              -> Option<Response> {
         if let &Some((ref captures, handler)) = &self.handler(&cmd) {
             info!("attempting to handle cmd ${:?}", cmd);
-            handler.handle(&cmd, &captures, Box::new(responder))
+            handler.handle(&cmd, &captures, responder)
         } else {
             None
         }
+    }
+
+    fn as_handler(&self) -> &Handler {
+        self
     }
 }
 
@@ -270,7 +295,8 @@ impl HyperHandler for Mux {
                 res.headers_mut().set(content_type);
                 let _ = res.send(bytes);
             };
-            if let Some(resp) = self.handle(&cmd) {
+            let responder = DefaultResponder { response_url: cmd.response_url.clone() };
+            if let Some(resp) = self.as_handler().handle(&cmd, &None, Box::new(responder)) {
                 match serde_json::to_string(&resp) {
                     Ok(payload) => write(payload.as_bytes(), ContentType::json()),
                     _ => write(DEFAULT_RESPONSE, ContentType::plaintext()),
