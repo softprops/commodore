@@ -22,9 +22,9 @@ pub fn main() {
         thread::spawn(move || {
             // simulate doing something important
             thread::sleep(Duration::from_secs(3));
-            responder.respond(Response::builder("some time later").build());
+            responder.respond(Response::ephemeral("some time later"));
         });
-        Some(Response::builder("got it").build())
+        Some(Response::ephemeral("got it"))
     });
     let srvc = Server::http(&addr[..])
                    .unwrap()
