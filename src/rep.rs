@@ -1,5 +1,3 @@
-
-
 /// A payload to reply to commands with
 /// for formatting rules see [this doc](https://api.slack.com/docs/formatting)
 /// for attachments see [this doc](https://api.slack.com/docs/attachments)

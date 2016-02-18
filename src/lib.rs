@@ -19,7 +19,7 @@ use hyper::server::{Handler as HyperHandler, Request, Response as HyperResponse}
 use std::collections::HashMap;
 use std::io::Read;
 
-const DEFAULT_RESPONSE: &'static [u8] =  b"ok";
+const DEFAULT_RESPONSE: &'static [u8] = b"ok";
 
 fn params<R: Read>(read: &mut R) -> HashMap<String, String> {
     let mut buffer = String::new();
@@ -31,15 +31,15 @@ fn params<R: Read>(read: &mut R) -> HashMap<String, String> {
     params
 }
 
+/// Capture results for regex matchers that collect captures
 pub type Captures<'a> = RegexCaptures<'a>;
 
-/// Responds to commands after some deferred time
-/// This allows command handlers to asyncronously
-/// response to commands
+/// Allows for responding ot commands after some delayed period of time
 pub trait Responder: Sync + Send {
     fn respond(&self, response: Response) -> ();
 }
 
+#[doc(hidden)]
 pub struct DefaultResponder {
     response_url: String,
 }
@@ -52,12 +52,6 @@ impl Responder for DefaultResponder {
                       .body(serde_json::to_string(&response).unwrap().as_bytes())
                       .send();
     }
-}
-
-pub struct DiscardResponder;
-
-impl Responder for DiscardResponder {
-    fn respond(&self, _: Response) {}
 }
 
 /// Handles matched commands
@@ -82,6 +76,7 @@ impl<F> Handler for F
     }
 }
 
+#[doc(hidden)]
 pub struct TokenValidator<H: Handler + 'static> {
     handler: H,
     token: String,
@@ -139,15 +134,13 @@ impl Matcher for MatchRegex {
     }
 }
 
-/// A binding between a command handler and which commands its handles
+#[doc(hidden)]
 pub struct Route {
     handler: Box<Handler>,
     matcher: Box<Matcher>,
 }
 
-///
 /// A command de-multiplexor
-///
 #[derive(Default)]
 pub struct Mux {
     routes: Vec<Box<Route>>,
@@ -208,6 +201,8 @@ impl Mux {
     }
 }
 
+/// A struct representation of a Slack Command and
+/// and the context from which it was triggered
 #[derive(Default, Debug, PartialEq)]
 pub struct Command {
     pub token: String,
@@ -291,7 +286,6 @@ impl HyperHandler for Mux {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -302,14 +296,23 @@ mod tests {
     fn matches_commands() {
         let cmd = Command { command: "/test".to_owned(), ..Default::default() };
         let (_, matched) = MatchCommand("/test".to_owned()).matches(&cmd);
-        assert!(matched)
+        assert!(matched, "cmd did not match")
     }
 
     #[test]
     fn matches_regexes() {
-        let cmd = Command { command: "/test".to_owned(), ..Default::default() };
-        let (_, matched) = MatchRegex(Regex::new("(test)").unwrap()).matches(&cmd);
-        assert!(matched)
+        let cmd = Command { command: "/test hello world".to_owned(), ..Default::default() };
+        let (captures, matched) = MatchRegex(Regex::new(r"(?P<greeting>\S+?) (?P<name>\S+?)$")
+                                                 .unwrap())
+                                      .matches(&cmd);
+        assert!(matched, "cmd did not match");
+        match captures {
+            Some(caps) => {
+                assert_eq!(caps.name("greeting"), Some("hello"));
+                assert_eq!(caps.name("name"), Some("world"));
+            }
+            _ => assert!(false, "expected captures"),
+        }
     }
 
     #[test]
@@ -326,19 +329,22 @@ mod tests {
         params.insert("text".to_owned(), "test_text".to_owned());
         params.insert("response_url".to_owned(), "test_response_url".to_owned());
         match Command::from_params(params) {
-            Some(cmd) => assert_eq!(cmd, Command {
-                token: "test_token".to_owned(),
-                team_id: "test_team".to_owned(),
-                team_domain: "test_team_domain".to_owned(),
-                channel_id: "test_channel_id".to_owned(),
-                channel_name: "test_channel_name".to_owned(),
-                user_id: "test_user_id".to_owned(),
-                user_name: "test_user_name".to_owned(),
-                command: "test_command".to_owned(),
-                text: "test_text".to_owned(),
-                response_url: "test_response_url".to_owned()
-            }),
-            _ => assert!(false)
+            Some(cmd) => {
+                assert_eq!(cmd,
+                           Command {
+                               token: "test_token".to_owned(),
+                               team_id: "test_team".to_owned(),
+                               team_domain: "test_team_domain".to_owned(),
+                               channel_id: "test_channel_id".to_owned(),
+                               channel_name: "test_channel_name".to_owned(),
+                               user_id: "test_user_id".to_owned(),
+                               user_name: "test_user_name".to_owned(),
+                               command: "test_command".to_owned(),
+                               text: "test_text".to_owned(),
+                               response_url: "test_response_url".to_owned(),
+                           })
+            }
+            _ => assert!(false, "failed to exact command"),
         }
     }
 }
