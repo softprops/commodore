@@ -1,10 +1,14 @@
 # commodore
 
-[![Build Status](https://travis-ci.org/softprops/commodore.svg?branch=master)](https://travis-ci.org/softprops/commodore) [![Coverage Status](https://coveralls.io/repos/github/softprops/commodore/badge.svg?branch=master)](https://coveralls.io/github/softprops/commodore?branch=master)
+[![Build Status](https://travis-ci.org/softprops/commodore.svg?branch=master)](https://travis-ci.org/softprops/commodore) [![Coverage Status](https://coveralls.io/repos/github/softprops/commodore/badge.svg?branch=master)](https://coveralls.io/github/softprops/commodore?branch=master) [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE)
 
 > call rank and take command of slack with rust at your helm
 
 Commodore allows you to easily extend your [Slack](https://slack.com/) expeience with [Rust](https://www.rust-lang.org/) via Slack's [Command API](https://api.slack.com/slash-commands).
+
+## rust docs
+
+Find them [here](https://softprops.github.io/commodore)
 
 ## usage
 
