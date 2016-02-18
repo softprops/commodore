@@ -10,12 +10,14 @@ keywords = ["hyper", "slack", "webhook"]
 license = "MIT"
 build = "build.rs"
 
+[dev-dependencies]
+env_logger = "0.3"
+
 [build-dependencies]
 serde_codegen = "0.6"
 syntex = "0.28"
 
 [dependencies]
-env_logger = "0.3"
 hyper = "0.6"
 log = "0.3"
 regex = "0.1"
