@@ -54,7 +54,6 @@ impl Responder for DefaultResponder {
     }
 }
 
-
 /// Command handling interface
 pub trait Handler: Sync + Send {
     /// handles Slack commands. Optional captures resulting
@@ -105,6 +104,7 @@ impl<H: Handler + 'static> Handler for TokenValidator<H> {
         if cmd.token == self.token {
             self.handler.handle(cmd, caps, responder)
         } else {
+            error!("cmd token ${:?} did not match handler token ${:?}", cmd.token, self.token);
             None
         }
     }
@@ -129,8 +129,7 @@ impl<F> Matcher for F
 }
 
 /// A direct command matcher
-///
-pub struct MatchCommand(String);
+pub struct MatchCommand(pub String);
 
 impl Matcher for MatchCommand {
     fn matches<'a>(&self, cmd: &'a Command) -> (Option<Captures<'a>>, bool) {
@@ -138,15 +137,30 @@ impl Matcher for MatchCommand {
     }
 }
 
-/// A regex pattern matcher
-///
-pub struct MatchRegex(Regex);
+/// A matcher that assumes any text starting with
+/// the provided string is a subcommand. i.e. /cmd help
+pub struct MatchSubCommand(pub String);
 
-impl Matcher for MatchRegex {
+impl Matcher for MatchSubCommand {
     fn matches<'a>(&self, cmd: &'a Command) -> (Option<Captures<'a>>, bool) {
-        if self.0.is_match(cmd.command.as_ref()) {
-            (self.0.captures(cmd.command.as_ref()), true)
+        if cmd.text.starts_with(&self.0) {
+            (None, true)
         } else {
+            debug!("regex {:?} did not match cmd {:?}", self.0, cmd.command);
+            (None, false)
+        }
+    }
+}
+
+/// A regex pattern matcher for command "text"
+pub struct MatchText(pub Regex);
+
+impl Matcher for MatchText {
+    fn matches<'a>(&self, cmd: &'a Command) -> (Option<Captures<'a>>, bool) {
+        if self.0.is_match(cmd.text.as_ref()) {
+            (self.0.captures(cmd.text.as_ref()), true)
+        } else {
+            debug!("regex {:?} did not match cmd {:?}", self.0, cmd.command);
             (None, false)
         }
     }
@@ -214,9 +228,10 @@ impl Handler for Mux {
               responder: Box<Responder>)
               -> Option<Response> {
         if let &Some((ref captures, handler)) = &self.handler(&cmd) {
-            info!("attempting to handle cmd ${:?}", cmd);
+            debug!("cmd matched. attempting to handle cmd {:#?}", cmd);
             handler.handle(&cmd, &captures, responder)
         } else {
+            debug!("no matching handlers for {:#?}", cmd);
             None
         }
     }
@@ -290,7 +305,7 @@ impl HyperHandler for Mux {
         let params = params(&mut body);
         // parse cmd
         if let Some(cmd) = Command::from_params(params) {
-            info!("rec cmd {:?}", cmd);
+            debug!("rec cmd {:?}", cmd);
             let write = |bytes: &[u8], content_type: ContentType| {
                 res.headers_mut().set(content_type);
                 let _ = res.send(bytes);
@@ -326,9 +341,9 @@ mod tests {
     }
 
     #[test]
-    fn matches_regexes() {
-        let cmd = Command { command: "/test hello world".to_owned(), ..Default::default() };
-        let (captures, matched) = MatchRegex(Regex::new(r"(?P<greeting>\S+?) (?P<name>\S+?)$")
+    fn matches_text() {
+        let cmd = Command { text: "/test hello world".to_owned(), ..Default::default() };
+        let (captures, matched) = MatchText(Regex::new(r"(?P<greeting>\S+?) (?P<name>\S+?)$")
                                                  .unwrap())
                                       .matches(&cmd);
         assert!(matched, "cmd did not match");
