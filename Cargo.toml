@@ -12,13 +12,14 @@ build = "build.rs"
 
 [dev-dependencies]
 env_logger = "0.3"
+hubcaps = { path = "../hubcaps" }
 
 [build-dependencies]
 serde_codegen = "0.6"
 syntex = "0.28"
 
 [dependencies]
-hyper = "0.6"
+hyper = "0.7"
 log = "0.3"
 regex = "0.1"
 serde = "0.6"
