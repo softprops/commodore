@@ -31,10 +31,10 @@ fn params<R: Read>(read: &mut R) -> HashMap<String, String> {
     params
 }
 
-/// Capture results for regex matchers that collect captures
+/// Results for regex matchers that collect captures
 pub type Captures<'a> = RegexCaptures<'a>;
 
-/// Allows for responding ot commands after some delayed period of time
+/// Deferred response interface
 pub trait Responder: Sync + Send {
     fn respond(&self, response: Response) -> ();
 }
@@ -54,7 +54,7 @@ impl Responder for DefaultResponder {
     }
 }
 
-/// Handles matched commands
+/// Command handling interface
 pub trait Handler: Sync + Send {
     fn handle(&self,
               cmd: &Command,
@@ -96,7 +96,7 @@ impl<H: Handler + 'static> Handler for TokenValidator<H> {
     }
 }
 
-/// A matcher matches commands
+/// Command matching interface
 pub trait Matcher: Send + Sync {
     fn matches<'a>(&self, cmd: &'a Command) -> (Option<Captures<'a>>, bool);
 }
@@ -201,7 +201,7 @@ impl Mux {
     }
 }
 
-/// A struct representation of a Slack Command and
+/// A struct representation of a Slack Command
 /// and the context from which it was triggered
 #[derive(Default, Debug, PartialEq)]
 pub struct Command {
