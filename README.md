@@ -4,7 +4,7 @@
 
 > call rank and take command of slack with rust at your helm
 
-Commodore allows you to easily extend your [Slack](https://slack.com/) expeience with [Rust](https://www.rust-lang.org/) via Slack's [Command API](https://api.slack.com/slash-commands).
+Commodore allows you to easily extend your [Slack](https://slack.com/) experience with [Rust](https://www.rust-lang.org/) via Slack's [Command API](https://api.slack.com/slash-commands).
 
 ## rust docs
 
