@@ -8,9 +8,9 @@ extern crate regex;
 extern crate serde;
 extern crate serde_json;
 
-mod rep;
+mod response;
 
-pub use rep::Response;
+pub use response::Response;
 use regex::{Captures as RegexCaptures, Regex};
 
 use hyper::Client;

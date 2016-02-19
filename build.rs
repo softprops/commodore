@@ -7,8 +7,8 @@ use std::path::Path;
 pub fn main() {
     let out_dir = env::var_os("OUT_DIR").unwrap();
 
-    let src = Path::new("src/rep.rs.in");
-    let dst = Path::new(&out_dir).join("rep.rs");
+    let src = Path::new("src/response.rs.in");
+    let dst = Path::new(&out_dir).join("response.rs");
 
     let mut registry = syntex::Registry::new();
 
