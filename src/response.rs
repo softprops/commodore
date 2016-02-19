@@ -1,6 +1,6 @@
 
 /// A payload to reply to commands with
-include!(concat!(env!("OUT_DIR"), "/rep.rs"));
+include!(concat!(env!("OUT_DIR"), "/response.rs"));
 
 impl Response {
     /// returned a response which will displayed for the user that issued the command
