@@ -108,7 +108,9 @@ impl<H: Handler + 'static> Handler for TokenValidator<H> {
         if cmd.token == self.token {
             self.handler.handle(cmd, caps, responder)
         } else {
-            error!("cmd token ${:?} did not match handler token ${:?}", cmd.token, self.token);
+            error!("cmd token ${:?} did not match handler token ${:?}",
+                   cmd.token,
+                   self.token);
             None
         }
     }
@@ -190,6 +192,7 @@ impl Mux {
         Mux { ..Default::default() }
     }
 
+    /// Install routing for a Slack command, secret token, and target Handler
     pub fn command<C, T, H>(&mut self, cmd: C, token: T, handler: H)
         where C: Into<String>,
               T: Into<String>,
@@ -202,6 +205,7 @@ impl Mux {
                       })
     }
 
+    /// Install routing for a Slack command matcher and target Handler
     pub fn matching<M, H>(&mut self, matcher: M, handler: H)
         where M: Matcher + 'static,
               H: Handler + 'static
@@ -213,11 +217,12 @@ impl Mux {
         self.route(route)
     }
 
-    ///
+    /// Install a command routing
     pub fn route(&mut self, route: Route) {
         self.routes.push(Box::new(route));
     }
 
+    /// Attempts to return the first match result for a target Handler
     pub fn handler<'a>(&self, cmd: &'a Command) -> Option<(Option<Captures<'a>>, &Box<Handler>)> {
         for r in self.routes.iter() {
             if let (captures, true) = r.matcher.matches(cmd) {
@@ -351,7 +356,7 @@ mod tests {
     fn matches_text() {
         let cmd = Command { text: "/test hello world".to_owned(), ..Default::default() };
         let (captures, matched) = MatchText(Regex::new(r"(?P<greeting>\S+?) (?P<name>\S+?)$")
-                                                 .unwrap())
+                                                .unwrap())
                                       .matches(&cmd);
         assert!(matched, "cmd did not match");
         match captures {
@@ -392,7 +397,7 @@ mod tests {
                                response_url: "test_response_url".to_owned(),
                            })
             }
-            _ => assert!(false, "failed to exact command"),
+            _ => assert!(false, "failed to extract command"),
         }
     }
 }

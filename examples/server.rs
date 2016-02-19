@@ -5,7 +5,7 @@ extern crate env_logger;
 extern crate commodore;
 extern crate hyper;
 
-use commodore::{Captures, Command, Mux, Response, Responder};
+use commodore::{Captures, Command, Mux, Responder, Response};
 use hyper::Server;
 use std::thread;
 use std::time::Duration;
