@@ -34,11 +34,11 @@ pub fn main() {
                 |c: &Command, _: &Option<Captures>, responder: Box<Responder>| -> Option<Response> {
                     info!("handler recv cmd {:#?}", c);
                     thread::spawn(move || {
-                        // simulate doing something important
+                        // simulate doing something time consuming
                         thread::sleep(Duration::from_secs(3));
-                        responder.respond(Response::builder("some time later").build());
+                        responder.respond(Response::in_channel("some time later"));
                     });
-                    Some(Response::builder("got it").build())
+                    Some(Response::emphemeral("I'll get back to you"))
                 });
     let srvc = Server::http(&addr[..])
                    .unwrap()
