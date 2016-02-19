@@ -1,4 +1,4 @@
-//! call rank and take command of slack with rust at your helm
+//! Call rank and take command of [Slack](https://slack.com/) with rust at your helm
 
 #[macro_use]
 extern crate log;
@@ -36,6 +36,9 @@ pub type Captures<'a> = RegexCaptures<'a>;
 
 /// Deferred response interface
 pub trait Responder: Sync + Send {
+    /// Calling respond should update
+    /// the channel or reply to the user
+    /// that issued the original command
     fn respond(&self, response: Response) -> ();
 }
 
@@ -55,6 +58,7 @@ impl Responder for DefaultResponder {
 }
 
 /// Command handling interface
+/// Implementation for Fn
 pub trait Handler: Sync + Send {
     /// handles Slack commands. Optional captures resulting
     /// from matching are provided along with an interface
@@ -116,6 +120,8 @@ impl<H: Handler + 'static> Handler for TokenValidator<H> {
 
 /// Command matching interface
 pub trait Matcher: Send + Sync {
+    /// returns of tuple of optional captures and an indicator for
+    /// whether or not the provided command is matched
     fn matches<'a>(&self, cmd: &'a Command) -> (Option<Captures<'a>>, bool);
 }
 
@@ -152,7 +158,8 @@ impl Matcher for MatchSubCommand {
     }
 }
 
-/// A regex pattern matcher for command "text"
+/// A regex pattern matcher for command text.
+/// Regex captures will be provided to the matched Handler
 pub struct MatchText(pub Regex);
 
 impl Matcher for MatchText {
