@@ -32,7 +32,6 @@ use std::thread;
 use std::time::Duration;
 
 pub fn main() {
-    env_logger::init().unwrap();
     let mut mux = Mux::new();
     mux.command("/commodore", "secrettoken", |c: &Command,
                  _: &Option<Captures>,
