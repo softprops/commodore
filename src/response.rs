@@ -26,6 +26,8 @@ impl Response {
         }
     }
 
+    /// returns a builder interfaces for constructing instances
+    /// of responses
     pub fn builder() -> ResponseBuilder {
         ResponseBuilder::new()
     }
@@ -74,6 +76,7 @@ impl ResponseBuilder {
     }
 }
 
+/// see https://api.slack.com/docs/message-attachments
 impl Attachment {
     pub fn new() -> Attachment {
         Attachment {
