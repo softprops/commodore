@@ -8,16 +8,16 @@ extern crate regex;
 extern crate serde;
 extern crate serde_json;
 
-mod response;
-
+use std::collections::HashMap;
+use std::io::Read;
 
 use hyper::Client;
 use hyper::header::ContentType;
 use hyper::server::{Handler as HyperHandler, Request, Response as HyperResponse};
 use regex::{Captures as RegexCaptures, Regex};
+
+mod response;
 pub use response::{Attachment, Field, Response};
-use std::collections::HashMap;
-use std::io::Read;
 
 const DEFAULT_RESPONSE: &'static [u8] = b"ok";
 
