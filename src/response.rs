@@ -79,9 +79,7 @@ impl ResponseBuilder {
 /// see https://api.slack.com/docs/message-attachments
 impl Attachment {
     pub fn new() -> Attachment {
-        Attachment {
-            ..Default::default()
-        }
+        Attachment { ..Default::default() }
     }
     pub fn builder() -> AttachmentBuilder {
         AttachmentBuilder::new()
@@ -90,92 +88,110 @@ impl Attachment {
 
 #[derive(Default)]
 pub struct AttachmentBuilder {
-     text: Option<String>,
-     color: Option<String>,
-     fallback: Option<String>,
-     pretext: Option<String>,
+    text: Option<String>,
+    color: Option<String>,
+    fallback: Option<String>,
+    pretext: Option<String>,
 
-     title: Option<String>,
-     title_link: Option<String>,
+    title: Option<String>,
+    title_link: Option<String>,
 
-     author_name: Option<String>,
-     author_link: Option<String>,
-     author_icon: Option<String>,
+    author_name: Option<String>,
+    author_link: Option<String>,
+    author_icon: Option<String>,
 
-     image_url: Option<String>,
-     thumb_url: Option<String>,
+    image_url: Option<String>,
+    thumb_url: Option<String>,
 
-     footer: Option<String>,
-     footer_icon: Option<String>,
+    footer: Option<String>,
+    footer_icon: Option<String>,
 
-     ts: Option<usize>,
+    ts: Option<usize>,
 
-     fields: Vec<Field>
+    fields: Vec<Field>,
 }
 
 impl AttachmentBuilder {
     pub fn new() -> AttachmentBuilder {
-        AttachmentBuilder {
-            ..Default::default()
-        }
+        AttachmentBuilder { ..Default::default() }
     }
 
-    pub fn text<S>(&mut self, txt: S) -> &mut AttachmentBuilder where S: Into<String> {
+    pub fn text<S>(&mut self, txt: S) -> &mut AttachmentBuilder
+        where S: Into<String>
+    {
         self.text = Some(txt.into());
         self
     }
 
-    pub fn color<S>(&mut self, color: S) -> &mut AttachmentBuilder where S: Into<String> {
+    pub fn color<S>(&mut self, color: S) -> &mut AttachmentBuilder
+        where S: Into<String>
+    {
         self.color = Some(color.into());
         self
     }
 
-    pub fn fallback<S>(&mut self, fallback: S) -> &mut AttachmentBuilder where S: Into<String> {
+    pub fn fallback<S>(&mut self, fallback: S) -> &mut AttachmentBuilder
+        where S: Into<String>
+    {
         self.fallback = Some(fallback.into());
         self
     }
 
-    pub fn pretext<S>(&mut self, pretext: S) -> &mut AttachmentBuilder where S: Into<String> {
+    pub fn pretext<S>(&mut self, pretext: S) -> &mut AttachmentBuilder
+        where S: Into<String>
+    {
         self.pretext = Some(pretext.into());
         self
     }
 
-    pub fn title<S>(&mut self, title: S) -> &mut AttachmentBuilder where S: Into<String> {
+    pub fn title<S>(&mut self, title: S) -> &mut AttachmentBuilder
+        where S: Into<String>
+    {
         self.title = Some(title.into());
         self
     }
 
-    pub fn author_name<S>(&mut self, author_name: S) -> &mut AttachmentBuilder where S: Into<String> {
+    pub fn author_name<S>(&mut self, author_name: S) -> &mut AttachmentBuilder
+        where S: Into<String>
+    {
         self.author_name = Some(author_name.into());
         self
     }
 
-    pub fn author_link<S>(&mut self, author_link: S) -> &mut AttachmentBuilder where S: Into<String> {
+    pub fn author_link<S>(&mut self, author_link: S) -> &mut AttachmentBuilder
+        where S: Into<String>
+    {
         self.author_link = Some(author_link.into());
         self
     }
 
-    pub fn author_icon<S>(&mut self, author_icon: S) -> &mut AttachmentBuilder where S: Into<String> {
+    pub fn author_icon<S>(&mut self, author_icon: S) -> &mut AttachmentBuilder
+        where S: Into<String>
+    {
         self.author_icon = Some(author_icon.into());
         self
     }
 
-    pub fn image_url<S>(&mut self, image_url: S) -> &mut AttachmentBuilder where S: Into<String> {
+    pub fn image_url<S>(&mut self, image_url: S) -> &mut AttachmentBuilder
+        where S: Into<String>
+    {
         self.image_url = Some(image_url.into());
         self
     }
 
-    pub fn thumb_url<S>(&mut self, thumb_url: S) -> &mut AttachmentBuilder where S: Into<String> {
+    pub fn thumb_url<S>(&mut self, thumb_url: S) -> &mut AttachmentBuilder
+        where S: Into<String>
+    {
         self.thumb_url = Some(thumb_url.into());
         self
     }
 
-    pub fn field(&mut self, f: Field) -> &mut AttachmentBuilder  {
+    pub fn field(&mut self, f: Field) -> &mut AttachmentBuilder {
         self.fields.push(f);
         self
     }
 
-    pub fn ts(&mut self, s: usize) -> &mut AttachmentBuilder  {
+    pub fn ts(&mut self, s: usize) -> &mut AttachmentBuilder {
         self.ts = Some(s);
         self
     }
@@ -215,9 +231,7 @@ mod tests {
 
     #[test]
     fn test_builder_default() {
-        match serde_json::to_string(
-            &Response::builder().build()
-        ) {
+        match serde_json::to_string(&Response::builder().build()) {
             Ok(json) => assert_eq!(json, r#"{"response_type":"ephemeral"}"#),
             _ => assert!(false, "failed to serialize json"),
         }
@@ -228,16 +242,12 @@ mod tests {
         let res = Response::builder()
             .text("foo")
             .in_channel()
-            .attach(
-                Attachment::builder()
-                    .text("attached")
-                    .color("red")
-                    .build()
-            )
+            .attach(Attachment::builder()
+                .text("attached")
+                .color("red")
+                .build())
             .build();
-        match serde_json::to_string(
-            &res
-        ) {
+        match serde_json::to_string(&res) {
             Ok(json) => assert_eq!(
                 json,
                 r#"{"text":"foo","response_type":"in_channel","attachments":[{"text":"attached","color":"red"}]}"#

@@ -15,7 +15,7 @@ use hyper::Client;
 use hyper::header::ContentType;
 use hyper::server::{Handler as HyperHandler, Request, Response as HyperResponse};
 use regex::{Captures as RegexCaptures, Regex};
-pub use response::Response;
+pub use response::{Attachment, Field, Response};
 use std::collections::HashMap;
 use std::io::Read;
 
