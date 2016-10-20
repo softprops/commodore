@@ -10,13 +10,19 @@ Commodore allows you to easily extend your [Slack](https://slack.com/) experienc
 
 Find them [here](https://softprops.github.io/commodore)
 
+## Install
+
+Note this crate relies on hyper for handling http. You will want to include the following in your `Cargo.toml` file.
+
+```toml
+[dependencies]
+commodore = "0.2"
+hyper = "0.9"
+```
+
 ## usage
 
 ```rust
-#[macro_use]
-extern crate log;
-extern crate env_logger;
-
 extern crate commodore;
 extern crate hyper;
 
@@ -32,7 +38,7 @@ pub fn main() {
                  _: &Option<Captures>,
                  responder: Box<Responder>|
                  -> Option<Response> {
-        info!("handler recv cmd {:#?}", c);
+        println!("handler recv cmd {:#?}", c);
         thread::spawn(move || {
             // simulate doing something important
             thread::sleep(Duration::from_secs(3));
