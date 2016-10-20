@@ -12,7 +12,6 @@ use std::time::Duration;
 
 pub fn main() {
     env_logger::init().unwrap();
-    let addr = format!("0.0.0.0:{}", 4567);
     let mut mux = Mux::new();
     mux.command("/commodore", "secrettoken", |c: &Command,
                  _: &Option<Captures>,
@@ -26,9 +25,9 @@ pub fn main() {
         });
         Some(Response::ephemeral("got it"))
     });
-    let srvc = Server::http(&addr[..])
+    let svc = Server::http("0.0.0.0:4567")
                    .unwrap()
-                   .handle(mux);
-    println!("listening on {}", addr);
-    srvc.unwrap();
+                   .handle(mux)
+                   .unwrap();
+    println!("listening on {}", svc.socket);
 }
