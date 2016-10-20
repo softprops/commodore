@@ -10,12 +10,12 @@ extern crate serde_json;
 
 mod response;
 
-pub use response::Response;
-use regex::{Captures as RegexCaptures, Regex};
 
 use hyper::Client;
 use hyper::header::ContentType;
 use hyper::server::{Handler as HyperHandler, Request, Response as HyperResponse};
+use regex::{Captures as RegexCaptures, Regex};
+pub use response::Response;
 use std::collections::HashMap;
 use std::io::Read;
 
@@ -26,7 +26,7 @@ fn params<R: Read>(read: &mut R) -> HashMap<String, String> {
     read.read_to_string(&mut buffer).unwrap();
     let mut params = HashMap::new();
     for (k, v) in url::form_urlencoded::parse(buffer.as_bytes()) {
-        params.insert(k, v);
+        params.insert(k.into_owned(), v.into_owned());
     }
     params
 }
@@ -47,13 +47,21 @@ pub struct DefaultResponder {
     response_url: String,
 }
 
+impl DefaultResponder {
+    pub fn new<U>(response_url: U) -> DefaultResponder
+        where U: Into<String>
+    {
+        DefaultResponder { response_url: response_url.into() }
+    }
+}
+
 impl Responder for DefaultResponder {
     fn respond(&self, response: Response) {
         let client = Client::new();
         let _ = client.post(&self.response_url[..])
-                      .header(ContentType::json())
-                      .body(serde_json::to_string(&response).unwrap().as_bytes())
-                      .send();
+            .header(ContentType::json())
+            .body(serde_json::to_string(&response).unwrap().as_bytes())
+            .send();
     }
 }
 
@@ -322,7 +330,7 @@ impl HyperHandler for Mux {
                 res.headers_mut().set(content_type);
                 let _ = res.send(bytes);
             };
-            let responder = DefaultResponder { response_url: cmd.response_url.clone() };
+            let responder = DefaultResponder::new(cmd.response_url.clone());
             if let Some(resp) = self.as_handler().handle(&cmd, &None, Box::new(responder)) {
                 match serde_json::to_string(&resp) {
                     Ok(payload) => write(payload.as_bytes(), ContentType::json()),
@@ -341,9 +349,9 @@ impl HyperHandler for Mux {
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
     use super::*;
     use super::regex::Regex;
-    use std::collections::HashMap;
 
     #[test]
     fn matches_commands() {
@@ -355,9 +363,8 @@ mod tests {
     #[test]
     fn matches_text() {
         let cmd = Command { text: "/test hello world".to_owned(), ..Default::default() };
-        let (captures, matched) = MatchText(Regex::new(r"(?P<greeting>\S+?) (?P<name>\S+?)$")
-                                                .unwrap())
-                                      .matches(&cmd);
+        let (captures, matched) =
+            MatchText(Regex::new(r"(?P<greeting>\S+?) (?P<name>\S+?)$").unwrap()).matches(&cmd);
         assert!(matched, "cmd did not match");
         match captures {
             Some(caps) => {
