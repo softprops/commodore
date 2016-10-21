@@ -1,3 +1,7 @@
+# 0.2.2
+
+* add missing attachment builder interfaces for footer and footer_icon
+
 # 0.2.1
 
 * expose ResponseBuilder and AttachmentBuilder interfaces

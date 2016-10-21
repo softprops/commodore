@@ -186,6 +186,16 @@ impl AttachmentBuilder {
         self
     }
 
+    pub fn footer<S>(&mut self, f: S) -> &mut AttachmentBuilder where S: Into<String> {
+        self.footer = Some(f.into());
+        self
+    }
+
+    pub fn footer_icon<S>(&mut self, f: S) -> &mut AttachmentBuilder where S: Into<String> {
+        self.footer_icon = Some(f.into());
+        self
+    }
+
     pub fn field(&mut self, f: Field) -> &mut AttachmentBuilder {
         self.fields.push(f);
         self
