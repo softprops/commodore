@@ -1,3 +1,7 @@
+# 0.2.1
+
+* expose ResponseBuilder and AttachmentBuilder interfaces
+
 # 0.2.0
 
 * updated dependencies

@@ -17,7 +17,7 @@ use hyper::server::{Handler as HyperHandler, Request, Response as HyperResponse}
 use regex::{Captures as RegexCaptures, Regex};
 
 mod response;
-pub use response::{Attachment, Field, Response};
+pub use response::{Attachment, Field, Response, ResponseBuilder, AttachmentBuilder};
 
 const DEFAULT_RESPONSE: &'static [u8] = b"ok";
 
