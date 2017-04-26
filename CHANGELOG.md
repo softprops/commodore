@@ -1,3 +1,7 @@
+# 0.3.0
+
+* upgarded to serde 0.9, hyper 0.10, and regex 1.4
+
 # 0.2.2
 
 * add missing attachment builder interfaces for footer and footer_icon
