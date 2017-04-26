@@ -14,8 +14,8 @@ extern crate serde_derive;
 extern crate serde_json;
 
 use hyper::Client;
-use hyper::net::HttpsConnector;
 use hyper::header::ContentType;
+use hyper::net::HttpsConnector;
 use hyper::server::{Handler as HyperHandler, Request, Response as HyperResponse};
 use hyper_native_tls::NativeTlsClient;
 use regex::{Captures as RegexCaptures, Regex};
@@ -64,11 +64,7 @@ impl DefaultResponder {
 
 impl Responder for DefaultResponder {
     fn respond(&self, response: Response) {
-        let client = Client::with_connector(
-            HttpsConnector::new(
-                NativeTlsClient::new().unwrap()
-            )
-        );
+        let client = Client::with_connector(HttpsConnector::new(NativeTlsClient::new().unwrap()));
         let _ = client
             .post(&self.response_url[..])
             .header(ContentType::json())

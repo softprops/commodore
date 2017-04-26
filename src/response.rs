@@ -1,13 +1,12 @@
 
 /// A payload to reply to commands with
-
 #[derive(Debug, Default, Serialize)]
 pub struct Response {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub text: Option<String>,
     pub response_type: String,
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub attachments: Vec<Attachment>
+    pub attachments: Vec<Attachment>,
 }
 
 #[derive(Debug, Default, Serialize, Clone)]
@@ -26,7 +25,6 @@ pub struct Attachment {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub title_link: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-
     pub author_name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub author_link: Option<String>,
@@ -47,14 +45,14 @@ pub struct Attachment {
     pub ts: Option<usize>,
 
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub fields: Vec<Field>
+    pub fields: Vec<Field>,
 }
 
 #[derive(Debug, Default, Serialize, Clone)]
 pub struct Field {
     pub title: String,
     pub value: String,
-    pub short: bool
+    pub short: bool,
 }
 
 
