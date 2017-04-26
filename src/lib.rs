@@ -1,20 +1,26 @@
 //! Call rank and take command of [Slack](https://slack.com/) with rust at your helm
 
+//#[macro_use]
+//extern crate error_chain;
 #[macro_use]
 extern crate log;
 extern crate hyper;
+extern crate hyper_native_tls;
 extern crate url;
 extern crate regex;
 extern crate serde;
+#[macro_use]
+extern crate serde_derive;
 extern crate serde_json;
 
-use std::collections::HashMap;
-use std::io::Read;
-
 use hyper::Client;
+use hyper::net::HttpsConnector;
 use hyper::header::ContentType;
 use hyper::server::{Handler as HyperHandler, Request, Response as HyperResponse};
+use hyper_native_tls::NativeTlsClient;
 use regex::{Captures as RegexCaptures, Regex};
+use std::collections::HashMap;
+use std::io::Read;
 
 mod response;
 pub use response::{Attachment, Field, Response, ResponseBuilder, AttachmentBuilder};
@@ -49,7 +55,8 @@ pub struct DefaultResponder {
 
 impl DefaultResponder {
     pub fn new<U>(response_url: U) -> DefaultResponder
-        where U: Into<String>
+    where
+        U: Into<String>,
     {
         DefaultResponder { response_url: response_url.into() }
     }
@@ -57,8 +64,13 @@ impl DefaultResponder {
 
 impl Responder for DefaultResponder {
     fn respond(&self, response: Response) {
-        let client = Client::new();
-        let _ = client.post(&self.response_url[..])
+        let client = Client::with_connector(
+            HttpsConnector::new(
+                NativeTlsClient::new().unwrap()
+            )
+        );
+        let _ = client
+            .post(&self.response_url[..])
             .header(ContentType::json())
             .body(serde_json::to_string(&response).unwrap().as_bytes())
             .send();
@@ -71,11 +83,12 @@ pub trait Handler: Sync + Send {
     /// handles Slack commands. Optional captures resulting
     /// from matching are provided along with an interface
     /// for deferred responses
-    fn handle(&self,
-              cmd: &Command,
-              caps: &Option<Captures>,
-              responder: Box<Responder>)
-              -> Option<Response>;
+    fn handle(
+        &self,
+        cmd: &Command,
+        caps: &Option<Captures>,
+        responder: Box<Responder>,
+    ) -> Option<Response>;
 
     /// provides a mean explicit coersion for
     /// disambiguating cases where a fn named `handle` is
@@ -85,14 +98,16 @@ pub trait Handler: Sync + Send {
 }
 
 impl<F> Handler for F
-    where F: Fn(&Command, &Option<Captures>, Box<Responder>) -> Option<Response>,
-          F: Send + Sync
+where
+    F: Fn(&Command, &Option<Captures>, Box<Responder>) -> Option<Response>,
+    F: Send + Sync,
 {
-    fn handle(&self,
-              cmd: &Command,
-              caps: &Option<Captures>,
-              responder: Box<Responder>)
-              -> Option<Response> {
+    fn handle(
+        &self,
+        cmd: &Command,
+        caps: &Option<Captures>,
+        responder: Box<Responder>,
+    ) -> Option<Response> {
         self(cmd, caps, responder)
     }
 
@@ -108,17 +123,20 @@ pub struct TokenValidator<H: Handler + 'static> {
 }
 
 impl<H: Handler + 'static> Handler for TokenValidator<H> {
-    fn handle(&self,
-              cmd: &Command,
-              caps: &Option<Captures>,
-              responder: Box<Responder>)
-              -> Option<Response> {
+    fn handle(
+        &self,
+        cmd: &Command,
+        caps: &Option<Captures>,
+        responder: Box<Responder>,
+    ) -> Option<Response> {
         if cmd.token == self.token {
             self.handler.handle(cmd, caps, responder)
         } else {
-            error!("cmd token ${:?} did not match handler token ${:?}",
-                   cmd.token,
-                   self.token);
+            error!(
+                "cmd token ${:?} did not match handler token ${:?}",
+                cmd.token,
+                self.token
+            );
             None
         }
     }
@@ -136,8 +154,9 @@ pub trait Matcher: Send + Sync {
 }
 
 impl<F> Matcher for F
-    where F: Fn(&Command) -> (Option<Captures>, bool),
-          F: Send + Sync
+where
+    F: Fn(&Command) -> (Option<Captures>, bool),
+    F: Send + Sync,
 {
     fn matches<'a>(&self, cmd: &'a Command) -> (Option<Captures<'a>>, bool) {
         self(cmd)
@@ -202,21 +221,25 @@ impl Mux {
 
     /// Install routing for a Slack command, secret token, and target Handler
     pub fn command<C, T, H>(&mut self, cmd: C, token: T, handler: H)
-        where C: Into<String>,
-              T: Into<String>,
-              H: Handler + 'static
+    where
+        C: Into<String>,
+        T: Into<String>,
+        H: Handler + 'static,
     {
-        self.matching(MatchCommand(cmd.into()),
-                      TokenValidator {
-                          handler: handler,
-                          token: token.into(),
-                      })
+        self.matching(
+            MatchCommand(cmd.into()),
+            TokenValidator {
+                handler: handler,
+                token: token.into(),
+            },
+        )
     }
 
     /// Install routing for a Slack command matcher and target Handler
     pub fn matching<M, H>(&mut self, matcher: M, handler: H)
-        where M: Matcher + 'static,
-              H: Handler + 'static
+    where
+        M: Matcher + 'static,
+        H: Handler + 'static,
     {
         let route = Route {
             handler: Box::new(handler),
@@ -242,11 +265,12 @@ impl Mux {
 }
 
 impl Handler for Mux {
-    fn handle(&self,
-              cmd: &Command,
-              _: &Option<Captures>,
-              responder: Box<Responder>)
-              -> Option<Response> {
+    fn handle(
+        &self,
+        cmd: &Command,
+        _: &Option<Captures>,
+        responder: Box<Responder>,
+    ) -> Option<Response> {
         if let &Some((ref captures, handler)) = &self.handler(&cmd) {
             debug!("cmd matched. attempting to handle cmd {:#?}", cmd);
             handler.handle(&cmd, &captures, responder)
@@ -288,28 +312,31 @@ impl Command {
                 Some(user_name),
                 Some(command),
                 Some(text),
-                Some(response_url)) = (params.get("token"),
-                                       params.get("team_id"),
-                                       params.get("team_domain"),
-                                       params.get("channel_id"),
-                                       params.get("channel_name"),
-                                       params.get("user_id"),
-                                       params.get("user_name"),
-                                       params.get("command"),
-                                       params.get("text"),
-                                       params.get("response_url")) {
-            Some(Command {
-                token: token.clone(),
-                team_id: team_id.clone(),
-                team_domain: team_domain.clone(),
-                channel_id: channel_id.clone(),
-                channel_name: channel_name.clone(),
-                user_id: user_id.clone(),
-                user_name: user_name.clone(),
-                command: command.clone(),
-                text: text.clone(),
-                response_url: response_url.clone(),
-            })
+                Some(response_url)) =
+            (params.get("token"),
+             params.get("team_id"),
+             params.get("team_domain"),
+             params.get("channel_id"),
+             params.get("channel_name"),
+             params.get("user_id"),
+             params.get("user_name"),
+             params.get("command"),
+             params.get("text"),
+             params.get("response_url")) {
+            Some(
+                Command {
+                    token: token.clone(),
+                    team_id: team_id.clone(),
+                    team_domain: team_domain.clone(),
+                    channel_id: channel_id.clone(),
+                    channel_name: channel_name.clone(),
+                    user_id: user_id.clone(),
+                    user_name: user_name.clone(),
+                    command: command.clone(),
+                    text: text.clone(),
+                    response_url: response_url.clone(),
+                },
+            )
         } else {
             None
         }
@@ -331,7 +358,8 @@ impl HyperHandler for Mux {
                 let _ = res.send(bytes);
             };
             let responder = DefaultResponder::new(cmd.response_url.clone());
-            if let Some(resp) = self.as_handler().handle(&cmd, &None, Box::new(responder)) {
+            if let Some(resp) = self.as_handler()
+                   .handle(&cmd, &None, Box::new(responder)) {
                 match serde_json::to_string(&resp) {
                     Ok(payload) => write(payload.as_bytes(), ContentType::json()),
                     _ => write(DEFAULT_RESPONSE, ContentType::plaintext()),
@@ -349,27 +377,33 @@ impl HyperHandler for Mux {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
     use super::*;
     use super::regex::Regex;
+    use std::collections::HashMap;
 
     #[test]
     fn matches_commands() {
-        let cmd = Command { command: "/test".to_owned(), ..Default::default() };
+        let cmd = Command {
+            command: "/test".to_owned(),
+            ..Default::default()
+        };
         let (_, matched) = MatchCommand("/test".to_owned()).matches(&cmd);
         assert!(matched, "cmd did not match")
     }
 
     #[test]
     fn matches_text() {
-        let cmd = Command { text: "/test hello world".to_owned(), ..Default::default() };
-        let (captures, matched) =
-            MatchText(Regex::new(r"(?P<greeting>\S+?) (?P<name>\S+?)$").unwrap()).matches(&cmd);
+        let cmd = Command {
+            text: "/test hello world".to_owned(),
+            ..Default::default()
+        };
+        let (captures, matched) = MatchText(Regex::new(r"(?P<greeting>\S+?) (?P<name>\S+?)$").unwrap(),)
+            .matches(&cmd);
         assert!(matched, "cmd did not match");
         match captures {
             Some(caps) => {
-                assert_eq!(caps.name("greeting"), Some("hello"));
-                assert_eq!(caps.name("name"), Some("world"));
+                assert_eq!(caps.name("greeting").map(|m| m.as_str()), Some("hello"));
+                assert_eq!(caps.name("name").map(|m| m.as_str()), Some("world"));
             }
             _ => assert!(false, "expected captures"),
         }
@@ -390,19 +424,21 @@ mod tests {
         params.insert("response_url".to_owned(), "test_response_url".to_owned());
         match Command::from_params(params) {
             Some(cmd) => {
-                assert_eq!(cmd,
-                           Command {
-                               token: "test_token".to_owned(),
-                               team_id: "test_team".to_owned(),
-                               team_domain: "test_team_domain".to_owned(),
-                               channel_id: "test_channel_id".to_owned(),
-                               channel_name: "test_channel_name".to_owned(),
-                               user_id: "test_user_id".to_owned(),
-                               user_name: "test_user_name".to_owned(),
-                               command: "test_command".to_owned(),
-                               text: "test_text".to_owned(),
-                               response_url: "test_response_url".to_owned(),
-                           })
+                assert_eq!(
+                    cmd,
+                    Command {
+                        token: "test_token".to_owned(),
+                        team_id: "test_team".to_owned(),
+                        team_domain: "test_team_domain".to_owned(),
+                        channel_id: "test_channel_id".to_owned(),
+                        channel_name: "test_channel_name".to_owned(),
+                        user_id: "test_user_id".to_owned(),
+                        user_name: "test_user_name".to_owned(),
+                        command: "test_command".to_owned(),
+                        text: "test_text".to_owned(),
+                        response_url: "test_response_url".to_owned(),
+                    }
+                )
             }
             _ => assert!(false, "failed to extract command"),
         }

@@ -1,12 +1,69 @@
 
 /// A payload to reply to commands with
-include!(concat!(env!("OUT_DIR"), "/response.rs"));
+
+#[derive(Debug, Default, Serialize)]
+pub struct Response {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub text: Option<String>,
+    pub response_type: String,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub attachments: Vec<Attachment>
+}
+
+#[derive(Debug, Default, Serialize, Clone)]
+pub struct Attachment {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub text: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub color: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fallback: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pretext: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub title: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub title_link: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+
+    pub author_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub author_link: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub author_icon: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub image_url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub thumb_url: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub footer: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub footer_icon: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ts: Option<usize>,
+
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub fields: Vec<Field>
+}
+
+#[derive(Debug, Default, Serialize, Clone)]
+pub struct Field {
+    pub title: String,
+    pub value: String,
+    pub short: bool
+}
+
 
 impl Response {
     /// returned a response which will displayed for the user that issued the command
     /// for formatting rules see [this doc](https://api.slack.com/docs/formatting)
     pub fn ephemeral<T>(text: T) -> Self
-        where T: Into<String>
+    where
+        T: Into<String>,
     {
         Response {
             text: Some(text.into()),
@@ -17,7 +74,8 @@ impl Response {
     /// return a response which will be displayed for anyone in the channel
     /// for formatting rules see [this doc](https://api.slack.com/docs/formatting)
     pub fn in_channel<T>(text: T) -> Self
-        where T: Into<String>
+    where
+        T: Into<String>,
     {
         Response {
             text: Some(text.into()),
@@ -42,11 +100,15 @@ pub struct ResponseBuilder {
 
 impl ResponseBuilder {
     pub fn new() -> ResponseBuilder {
-        ResponseBuilder { response_type: "ephemeral".to_owned(), ..Default::default() }
+        ResponseBuilder {
+            response_type: "ephemeral".to_owned(),
+            ..Default::default()
+        }
     }
 
     pub fn text<T>(&mut self, text: T) -> &mut ResponseBuilder
-        where T: Into<String>
+    where
+        T: Into<String>,
     {
         self.text = Some(text.into());
         self
@@ -117,81 +179,97 @@ impl AttachmentBuilder {
     }
 
     pub fn text<S>(&mut self, txt: S) -> &mut AttachmentBuilder
-        where S: Into<String>
+    where
+        S: Into<String>,
     {
         self.text = Some(txt.into());
         self
     }
 
     pub fn color<S>(&mut self, color: S) -> &mut AttachmentBuilder
-        where S: Into<String>
+    where
+        S: Into<String>,
     {
         self.color = Some(color.into());
         self
     }
 
     pub fn fallback<S>(&mut self, fallback: S) -> &mut AttachmentBuilder
-        where S: Into<String>
+    where
+        S: Into<String>,
     {
         self.fallback = Some(fallback.into());
         self
     }
 
     pub fn pretext<S>(&mut self, pretext: S) -> &mut AttachmentBuilder
-        where S: Into<String>
+    where
+        S: Into<String>,
     {
         self.pretext = Some(pretext.into());
         self
     }
 
     pub fn title<S>(&mut self, title: S) -> &mut AttachmentBuilder
-        where S: Into<String>
+    where
+        S: Into<String>,
     {
         self.title = Some(title.into());
         self
     }
 
     pub fn author_name<S>(&mut self, author_name: S) -> &mut AttachmentBuilder
-        where S: Into<String>
+    where
+        S: Into<String>,
     {
         self.author_name = Some(author_name.into());
         self
     }
 
     pub fn author_link<S>(&mut self, author_link: S) -> &mut AttachmentBuilder
-        where S: Into<String>
+    where
+        S: Into<String>,
     {
         self.author_link = Some(author_link.into());
         self
     }
 
     pub fn author_icon<S>(&mut self, author_icon: S) -> &mut AttachmentBuilder
-        where S: Into<String>
+    where
+        S: Into<String>,
     {
         self.author_icon = Some(author_icon.into());
         self
     }
 
     pub fn image_url<S>(&mut self, image_url: S) -> &mut AttachmentBuilder
-        where S: Into<String>
+    where
+        S: Into<String>,
     {
         self.image_url = Some(image_url.into());
         self
     }
 
     pub fn thumb_url<S>(&mut self, thumb_url: S) -> &mut AttachmentBuilder
-        where S: Into<String>
+    where
+        S: Into<String>,
     {
         self.thumb_url = Some(thumb_url.into());
         self
     }
 
-    pub fn footer<S>(&mut self, f: S) -> &mut AttachmentBuilder where S: Into<String> {
+    pub fn footer<S>(&mut self, f: S) -> &mut AttachmentBuilder
+    where
+        S: Into<String>,
+    {
         self.footer = Some(f.into());
         self
     }
 
-    pub fn footer_icon<S>(&mut self, f: S) -> &mut AttachmentBuilder where S: Into<String> {
+    pub fn footer_icon<S>(&mut self, f: S) -> &mut AttachmentBuilder
+    where
+        S: Into<String>,
+    {
         self.footer_icon = Some(f.into());
         self
     }
@@ -252,10 +330,12 @@ mod tests {
         let res = Response::builder()
             .text("foo")
             .in_channel()
-            .attach(Attachment::builder()
-                .text("attached")
-                .color("red")
-                .build())
+            .attach(
+                Attachment::builder()
+                    .text("attached")
+                    .color("red")
+                    .build(),
+            )
             .build();
         match serde_json::to_string(&res) {
             Ok(json) => assert_eq!(

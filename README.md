@@ -6,18 +6,16 @@
 
 Commodore allows you to easily extend your [Slack](https://slack.com/) experience with [Rust](https://www.rust-lang.org/) via Slack's [Command API](https://api.slack.com/slash-commands).
 
-## rust docs
-
-Find them [here](https://softprops.github.io/commodore)
+[Documentation](https://softprops.github.io/commodore)
 
 ## Install
 
-Note this crate relies on hyper for handling http. You will want to include the following in your `Cargo.toml` file.
+> Note: this crate relies on hyper for handling http. You will want to include the following in your `Cargo.toml` file.
 
 ```toml
 [dependencies]
-commodore = "0.2"
-hyper = "0.9"
+commodore = "0.3"
+hyper = "0.10"
 ```
 
 ## usage
@@ -84,4 +82,4 @@ fn main() {
 }
 ```
 
-Doug Tangren (softprops) 2016
+Doug Tangren (softprops) 2016-2017
